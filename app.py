@@ -42,7 +42,8 @@ image_files = ['logouns.png']
 desired_width = 160
 desired_height = 160
 
-col1, col2 = st.columns([2, 10])
+# Create a row for the logo and introductory information
+col1, col2 = st.columns([1, 3])
 
 with col1:
     for idx, image_file in enumerate(image_files):
@@ -52,6 +53,14 @@ with col1:
 with col2:
     st.header('X INSTITUTE')
     st.subheader("Students Performance Prediction")
+    st.write("""
+        This web app is designed to predict students academic performance based on the given input.
+    """)
+    st.write("""
+        **Nama:** Arini Arumsari \n
+        **Email:** ariniarum98@gmail.com \n
+        **Id Dicoding:** -
+    """)
 
 # Sidebar introduction
 st.sidebar.write("""
