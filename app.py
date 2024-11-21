@@ -50,7 +50,7 @@ st.markdown(
 )
 
 # Load logo
-image_files = ['logo-x.png']
+image_files = ['logouns.png']
 desired_width = 160
 desired_height = 160
 
