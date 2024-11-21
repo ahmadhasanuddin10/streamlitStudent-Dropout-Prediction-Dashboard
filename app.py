@@ -38,7 +38,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Add logo
-image_files = ['logouns.png']
+image_files = ['pubg.png']
 desired_width = 160
 desired_height = 160
 
@@ -51,28 +51,17 @@ with col1:
         resized_img = img.resize((desired_width, desired_height))
         st.image(resized_img)
 with col2:
-    st.header('X INSTITUTE')
+    st.header('Jaya Jaya Institut')
     st.subheader("Students Performance Prediction")
     st.write("""
-        This web app is designed to predict students academic performance based on the given input.
+        Digunakan untuk memprediksi Performa Mahasiswa
     """)
     st.write("""
-        **Nama:** Arini Arumsari \n
-        **Email:** ariniarum98@gmail.com \n
-        **Id Dicoding:** -
+        **Nama:** Hasanuddin \n
+        **Email:** hasanuddin5@gmail.com \n
+        
     """)
 
-# Sidebar introduction
-st.sidebar.write("""
-    This web app is designed to predict students academic performance based on the given input.
-""")
-
-# Sidebar contact information
-st.sidebar.write("""
-    **Nama:** Arini Arumsari \n
-    **Email:** ariniarum98@gmail.com \n
-    **Id Dicoding:** -
-""")
 
 # Initialize an empty dictionary to store user input
 data = {}
@@ -156,5 +145,4 @@ if st.button('Click Here to Predict'):
         output = prediction(new_data)
         st.success(f"Prediction: {output}")
 
-# Use a different visual effect instead of snow
-st.balloons()  # You can replace this with any other effect
+
