@@ -1,24 +1,19 @@
-#Students_Performance.py
 import streamlit as st
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 import joblib
 from PIL import Image
 import time
-from data_preprocessing import data_preprocessing
+from data_preprocessing import preprocess_data, encode_feature
+from prediction import generate_prediction
 
-from data_preprocessing import encoder_Daytime_evening_attendance, encoder_Debtor, encoder_Displaced, encoder_Gender, encoder_Scholarship_holder, encoder_Tuition_fees_up_to_date
-from data_preprocessing import scaler_Admission_grade, scaler_Curricular_units_1st_sem_approved, scaler_Curricular_units_1st_sem_credited, scaler_Curricular_units_1st_sem_enrolled, scaler_Curricular_units_1st_sem_grade, scaler_Curricular_units_2nd_sem_approved, scaler_Curricular_units_2nd_sem_credited, scaler_Curricular_units_2nd_sem_enrolled, scaler_Curricular_units_2nd_sem_grade, scaler_Previous_qualification_grade
+# Set up the Streamlit page
+st.set_page_config(page_title="🎓 Predicting Student Performance", layout="wide")
 
-from prediction import prediction
-
-st.set_page_config(page_title="🎓 Students Performance", layout="wide")
-
+# Displaying logo image
 image_files = ['logouns.png']
-
 desired_width = 160
 desired_height = 160
-
 col1, col2 = st.columns([2, 10])
 
 with col1:
@@ -26,100 +21,112 @@ with col1:
         img = Image.open(image_file)
         resized_img = img.resize((desired_width, desired_height))
         st.image(resized_img)
+
 with col2:
-    st.header('X INSTITUTE')
-    st.subheader("Students Performance Prediction")
+    st.header('UNS')
+    st.subheader("Predicting Student's Academic Performance")
 
+# Sidebar description
 st.sidebar.write("""
-    This web app is designed to predict students academic performance based on the given input.
+    This web app is designed to predict the academic performance of students based on various factors.
 """)
-
 st.sidebar.write("""
-    **Nama:** Arini Arumsari \n
-    **Email:** ariniarum98@gmail.com \n
-    **Id Dicoding:** -
+    **Name:** hasan \n
+    **Email:** hasan6@gmail.com \n
+     -
 """)
 
 # Initialize an empty dictionary to store user input
-data = {}
+user_data = {}
 
-# Convert user input dictionary to DataFrame
-user_input_df = pd.DataFrame(data, index=[0])
+# Convert input dictionary to DataFrame
+user_input_df = pd.DataFrame(user_data, index=[0])
 
-def encode_selection(encoder, selection, labels):
-    encoder.fit(labels)
-    return encoder.transform([selection])[0]
+# Function to encode categorical input using the provided encoder
+def encode_user_input(encoder, user_selection, label_options):
+    encoder.fit(label_options)
+    return encoder.transform([user_selection])[0]
 
-def create_slider(label, min_value, max_value, value):
-    data[label] = [st.slider(label=label.replace('_', ' '), min_value=min_value, max_value=max_value, value=value)]
+# Function to create slider for numeric input
+def create_numeric_slider(label, min_value, max_value, default_value):
+    user_data[label] = [st.slider(label=label.replace('_', ' ').title(), min_value=min_value, max_value=max_value, value=default_value)]
 
+# Feature inputs for prediction
 col1, col2, col3, col4 = st.columns(4)
+
 with col1:
-    encoder_Tuition_fees_up_to_date.fit([0, 1])
-    Tuition_fees_up_to_date = st.selectbox(label='Tuition fees', options=[0, 1], index=0)
-    data['Tuition_fees_up_to_date'] = [encoder_Tuition_fees_up_to_date.transform([Tuition_fees_up_to_date])[0]]
+    tuition_fees = st.selectbox('Tuition Fees Status', options=[0, 1], index=0)
+    user_data['Tuition_fees'] = [encode_user_input(LabelEncoder(), tuition_fees, [0, 1])]
+
 with col2:
-    encoder_Scholarship_holder.fit([0, 1])
-    Scholarship_holder = st.selectbox(label='Scholarship holder', options=[0, 1], index=0)
-    data['Scholarship_holder'] = [encoder_Scholarship_holder.transform([Scholarship_holder])[0]]
+    scholarship_status = st.selectbox('Scholarship Holder', options=[0, 1], index=0)
+    user_data['Scholarship'] = [encode_user_input(LabelEncoder(), scholarship_status, [0, 1])]
+
 with col3:
-    encoder_Debtor.fit([0, 1])
-    Debtor = st.selectbox(label='Debtor', options=[0, 1], index=1)
-    data['Debtor'] = [encoder_Debtor.transform([Debtor])[0]]
+    debtor_status = st.selectbox('Debtor Status', options=[0, 1], index=1)
+    user_data['Debtor'] = [encode_user_input(LabelEncoder(), debtor_status, [0, 1])]
+
 with col4:
-    encoder_Displaced.fit([0, 1])
-    Displaced = st.selectbox(label='Displaced', options=[0, 1], index=0)
-    data['Displaced'] = [encoder_Displaced.transform([Displaced])[0]]
+    displaced_status = st.selectbox('Displaced Student', options=[0, 1], index=0)
+    user_data['Displaced'] = [encode_user_input(LabelEncoder(), displaced_status, [0, 1])]
 
+# Additional feature inputs in subsequent columns
 col5, col6, col7, col8 = st.columns(4)
-with col5:
-    encoder_Daytime_evening_attendance.fit([0, 1])
-    Daytime_evening_attendance = st.selectbox(label='Attendance', options=[0, 1], index=0)
-    data['Daytime_evening_attendance'] = [encoder_Daytime_evening_attendance.transform([Daytime_evening_attendance])[0]]
-with col6:
-    encoder_Gender = LabelEncoder()
-    encoder_Gender.fit(["Female", "Male"])
-    Gender = st.selectbox(label='Gender', options=["Female", "Male"], index=1)
-    data['Gender'] = encoder_Gender.transform([Gender])[0]
-    # print(data['Gender'])
-with col7:
-    create_slider('Admission_grade', 95, 190, 100)
-with col8:
-    create_slider('Previous_qualification_grade', 95, 190, 100)
 
+with col5:
+    attendance_type = st.selectbox('Class Attendance', options=[0, 1], index=0)
+    user_data['Attendance'] = [encode_user_input(LabelEncoder(), attendance_type, [0, 1])]
+
+with col6:
+    gender = st.selectbox('Gender', options=["Female", "Male"], index=1)
+    user_data['Gender'] = LabelEncoder().fit(["Female", "Male"]).transform([gender])[0]
+
+with col7:
+    create_numeric_slider('Admission Grade', 95, 190, 100)
+
+with col8:
+    create_numeric_slider('Previous Qualification Grade', 95, 190, 100)
+
+# Other academic features
 col9, col10, col11, col12 = st.columns(4)
 with col9:
-    create_slider('Curricular_units_1st_sem_approved', 0, 26, 5)
+    create_numeric_slider('1st Semester Approved Units', 0, 26, 5)
+
 with col10:
-    create_slider('Curricular_units_1st_sem_grade', 0, 18, 5)
+    create_numeric_slider('1st Semester Grade', 0, 18, 5)
+
 with col11:
-    create_slider('Curricular_units_1st_sem_enrolled', 0, 26, 5)
+    create_numeric_slider('1st Semester Enrolled Units', 0, 26, 5)
+
 with col12:
-    create_slider('Curricular_units_1st_sem_credited', 0, 20, 5)
+    create_numeric_slider('1st Semester Credited Units', 0, 20, 5)
 
 col13, col14, col15, col16 = st.columns(4)
 with col13:
-    create_slider('Curricular_units_2nd_sem_approved', 0, 20, 5)
+    create_numeric_slider('2nd Semester Approved Units', 0, 20, 5)
+
 with col14:
-    create_slider('Curricular_units_2nd_sem_grade', 0, 20, 12)
+    create_numeric_slider('2nd Semester Grade', 0, 20, 12)
+
 with col15:
-    create_slider('Curricular_units_2nd_sem_enrolled', 0, 23, 5)
+    create_numeric_slider('2nd Semester Enrolled Units', 0, 23, 5)
+
 with col16:
-    create_slider('Curricular_units_2nd_sem_credited', 0, 19, 5)
+    create_numeric_slider('2nd Semester Credited Units', 0, 19, 5)
 
-# Convert user input dictionary to DataFrame
-user_input_df = pd.DataFrame(data, index=[0])
+# Convert the user input to DataFrame
+user_input_df = pd.DataFrame(user_data, index=[0])
 
-# Display user input
-with st.expander("Raw Dataset"):
-    st.dataframe(data=user_input_df, width=1200, height=20)
+# Display the input data for review
+with st.expander("Review Your Data"):
+    st.dataframe(user_input_df, width=1200, height=300)
 
-# Preprocess data and make prediction on button click
-if st.button('Click Here to Predict'):
-    new_data = data_preprocessing(data=data)
-    with st.spinner('Predicting...'):
-        time.sleep(2)  # Simulating prediction process
-        output = prediction(new_data)
-        st.success(f"Prediction: {output}")
+# Make prediction on button click
+if st.button('Predict Student Performance'):
+    preprocessed_data = preprocess_data(user_data)
+    with st.spinner('Making Prediction...'):
+        time.sleep(2)  # Simulating prediction delay
+        prediction_result = generate_prediction(preprocessed_data)
+        st.success(f"Predicted Performance: {prediction_result}")
 
 st.snow()
