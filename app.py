@@ -1,92 +1,125 @@
+#Students_Performance.py
 import streamlit as st
 import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
-from sklearn.preprocessing import StandardScaler, LabelEncoder
-from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+from sklearn.preprocessing import LabelEncoder
 import joblib
+from PIL import Image
+import time
+from data_preprocessing import data_preprocessing
 
-# Load data
-@st.cache
-def load_data():
-    data = pd.read_csv("data (1).csv", sep=";")
-    return data
+from data_preprocessing import encoder_Daytime_evening_attendance, encoder_Debtor, encoder_Displaced, encoder_Gender, encoder_Scholarship_holder, encoder_Tuition_fees_up_to_date
+from data_preprocessing import scaler_Admission_grade, scaler_Curricular_units_1st_sem_approved, scaler_Curricular_units_1st_sem_credited, scaler_Curricular_units_1st_sem_enrolled, scaler_Curricular_units_1st_sem_grade, scaler_Curricular_units_2nd_sem_approved, scaler_Curricular_units_2nd_sem_credited, scaler_Curricular_units_2nd_sem_enrolled, scaler_Curricular_units_2nd_sem_grade, scaler_Previous_qualification_grade
 
-# Preprocess data
-def preprocess_data(data):
-    categorical_features = ['Gender', 'Displaced', 'Debtor', 'Scholarship_holder', 'Tuition_fees_up_to_date', 'Daytime_evening_attendance']
-    data[categorical_features] = data[categorical_features].replace({'0': 'No', '1': 'Yes'})
+from prediction import prediction
 
-    # Encoding
-    label_encoder = LabelEncoder()
-    for col in categorical_features:
-        data[col] = label_encoder.fit_transform(data[col])
+st.set_page_config(page_title="🎓 Students Performance", layout="wide")
 
-    # Normalization
-    scaler = StandardScaler()
-    scaled_columns = ['Admission_grade', 'Previous_qualification_grade', 'Curricular_units_1st_sem_approved']
-    data[scaled_columns] = scaler.fit_transform(data[scaled_columns])
+image_files = ['logouns.png']
 
-    return data
+desired_width = 160
+desired_height = 160
 
-# Model training
-def train_models(X_train, y_train):
-    # Train Decision Tree
-    dt_model = DecisionTreeClassifier()
-    dt_params = {'max_depth': [5, 10], 'min_samples_leaf': [1, 5], 'criterion': ['gini', 'entropy']}
-    dt_grid = GridSearchCV(dt_model, dt_params, cv=5, scoring='accuracy')
-    dt_grid.fit(X_train, y_train)
+col1, col2 = st.columns([2, 10])
 
-    # Train Logistic Regression
-    lr_model = LogisticRegression()
-    lr_params = {'C': [0.1, 1, 10], 'solver': ['liblinear', 'saga']}
-    lr_grid = GridSearchCV(lr_model, lr_params, cv=5, scoring='accuracy')
-    lr_grid.fit(X_train, y_train)
+with col1:
+    for idx, image_file in enumerate(image_files):
+        img = Image.open(image_file)
+        resized_img = img.resize((desired_width, desired_height))
+        st.image(resized_img)
+with col2:
+    st.header('X INSTITUTE')
+    st.subheader("Students Performance Prediction")
 
-    # Train Random Forest
-    rf_model = RandomForestClassifier()
-    rf_params = {'n_estimators': [100, 200], 'max_depth': [10, 20]}
-    rf_grid = GridSearchCV(rf_model, rf_params, cv=5, scoring='accuracy')
-    rf_grid.fit(X_train, y_train)
+st.sidebar.write("""
+    This web app is designed to predict students academic performance based on the given input.
+""")
 
-    return dt_grid, lr_grid, rf_grid
+st.sidebar.write("""
+    **Nama:** Arini Arumsari \n
+    **Email:** ariniarum98@gmail.com \n
+    **Id Dicoding:** -
+""")
 
-# Predict and visualize results
-def predict_and_visualize(model, X_test, y_test, model_name):
-    y_pred = model.predict(X_test)
-    cm = confusion_matrix(y_test, y_pred)
-    st.write(f"{model_name} Confusion Matrix")
-    st.pyplot(sns.heatmap(cm, annot=True, cmap='viridis', fmt='g'))
+# Initialize an empty dictionary to store user input
+data = {}
 
-    st.write(f"{model_name} Classification Report:")
-    st.text(classification_report(y_test, y_pred))
+# Convert user input dictionary to DataFrame
+user_input_df = pd.DataFrame(data, index=[0])
 
-# Streamlit app layout
-st.title("Machine Learning Model Deployment")
-st.write("This is a simple Streamlit app for training and evaluating machine learning models.")
+def encode_selection(encoder, selection, labels):
+    encoder.fit(labels)
+    return encoder.transform([selection])[0]
 
-# Load and preprocess the data
-data = load_data()
-data = preprocess_data(data)
+def create_slider(label, min_value, max_value, value):
+    data[label] = [st.slider(label=label.replace('_', ' '), min_value=min_value, max_value=max_value, value=value)]
 
-# Split the data
-X = data.drop(['Status'], axis=1)
-y = data['Status']
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+col1, col2, col3, col4 = st.columns(4)
+with col1:
+    encoder_Tuition_fees_up_to_date.fit([0, 1])
+    Tuition_fees_up_to_date = st.selectbox(label='Tuition fees', options=[0, 1], index=0)
+    data['Tuition_fees_up_to_date'] = [encoder_Tuition_fees_up_to_date.transform([Tuition_fees_up_to_date])[0]]
+with col2:
+    encoder_Scholarship_holder.fit([0, 1])
+    Scholarship_holder = st.selectbox(label='Scholarship holder', options=[0, 1], index=0)
+    data['Scholarship_holder'] = [encoder_Scholarship_holder.transform([Scholarship_holder])[0]]
+with col3:
+    encoder_Debtor.fit([0, 1])
+    Debtor = st.selectbox(label='Debtor', options=[0, 1], index=1)
+    data['Debtor'] = [encoder_Debtor.transform([Debtor])[0]]
+with col4:
+    encoder_Displaced.fit([0, 1])
+    Displaced = st.selectbox(label='Displaced', options=[0, 1], index=0)
+    data['Displaced'] = [encoder_Displaced.transform([Displaced])[0]]
 
-# Train models
-dt_grid, lr_grid, rf_grid = train_models(X_train, y_train)
+col5, col6, col7, col8 = st.columns(4)
+with col5:
+    encoder_Daytime_evening_attendance.fit([0, 1])
+    Daytime_evening_attendance = st.selectbox(label='Attendance', options=[0, 1], index=0)
+    data['Daytime_evening_attendance'] = [encoder_Daytime_evening_attendance.transform([Daytime_evening_attendance])[0]]
+with col6:
+    encoder_Gender = LabelEncoder()
+    encoder_Gender.fit(["Female", "Male"])
+    Gender = st.selectbox(label='Gender', options=["Female", "Male"], index=1)
+    data['Gender'] = encoder_Gender.transform([Gender])[0]
+    # print(data['Gender'])
+with col7:
+    create_slider('Admission_grade', 95, 190, 100)
+with col8:
+    create_slider('Previous_qualification_grade', 95, 190, 100)
 
-# Display model accuracy
-st.write(f"Best Decision Tree Accuracy: {accuracy_score(y_test, dt_grid.predict(X_test))}")
-st.write(f"Best Logistic Regression Accuracy: {accuracy_score(y_test, lr_grid.predict(X_test))}")
-st.write(f"Best Random Forest Accuracy: {accuracy_score(y_test, rf_grid.predict(X_test))}")
+col9, col10, col11, col12 = st.columns(4)
+with col9:
+    create_slider('Curricular_units_1st_sem_approved', 0, 26, 5)
+with col10:
+    create_slider('Curricular_units_1st_sem_grade', 0, 18, 5)
+with col11:
+    create_slider('Curricular_units_1st_sem_enrolled', 0, 26, 5)
+with col12:
+    create_slider('Curricular_units_1st_sem_credited', 0, 20, 5)
 
-# Visualize confusion matrices
-predict_and_visualize(dt_grid, X_test, y_test, "Decision Tree")
-predict_and_visualize(lr_grid, X_test, y_test, "Logistic Regression")
-predict_and_visualize(rf_grid, X_test, y_test, "Random Forest")
+col13, col14, col15, col16 = st.columns(4)
+with col13:
+    create_slider('Curricular_units_2nd_sem_approved', 0, 20, 5)
+with col14:
+    create_slider('Curricular_units_2nd_sem_grade', 0, 20, 12)
+with col15:
+    create_slider('Curricular_units_2nd_sem_enrolled', 0, 23, 5)
+with col16:
+    create_slider('Curricular_units_2nd_sem_credited', 0, 19, 5)
+
+# Convert user input dictionary to DataFrame
+user_input_df = pd.DataFrame(data, index=[0])
+
+# Display user input
+with st.expander("Raw Dataset"):
+    st.dataframe(data=user_input_df, width=1200, height=20)
+
+# Preprocess data and make prediction on button click
+if st.button('Click Here to Predict'):
+    new_data = data_preprocessing(data=data)
+    with st.spinner('Predicting...'):
+        time.sleep(2)  # Simulating prediction process
+        output = prediction(new_data)
+        st.success(f"Prediction: {output}")
+
+st.snow()
