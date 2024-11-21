@@ -1,101 +1,133 @@
+# Students_Performance.py
 import streamlit as st
 import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
+from sklearn.preprocessing import LabelEncoder
+import joblib
+from PIL import Image
+import time
+from data_preprocessing import data_preprocessing
 
-# Konfigurasi halaman Streamlit
-st.set_page_config(
-    page_title="Student Dropout Prediction Dashboard",
-    layout="wide",
-    initial_sidebar_state="expanded"
+# Import encoder dan scaler
+from data_preprocessing import (
+    encoder_Daytime_evening_attendance,
+    encoder_Debtor,
+    encoder_Displaced,
+    encoder_Gender,
+    encoder_Scholarship_holder,
+    encoder_Tuition_fees_up_to_date,
+    scaler_Admission_grade,
+    scaler_Curricular_units_1st_sem_approved,
+    scaler_Curricular_units_1st_sem_credited,
+    scaler_Curricular_units_1st_sem_enrolled,
+    scaler_Curricular_units_1st_sem_grade,
+    scaler_Curricular_units_2nd_sem_approved,
+    scaler_Curricular_units_2nd_sem_credited,
+    scaler_Curricular_units_2nd_sem_enrolled,
+    scaler_Curricular_units_2nd_sem_grade,
+    scaler_Previous_qualification_grade,
 )
 
-# Menambahkan header
-st.title("🎓 Student Dropout Prediction Dashboard")
-st.markdown("""
-    Selamat datang di dashboard prediksi dropout siswa. 
-    Dashboard ini dirancang untuk memberikan insight tentang status siswa berdasarkan prediksi model.
-""")
+from prediction import prediction
 
-# Memuat data dari CSV
-data = pd.read_csv('student_dropout_predictions.csv')
+# Konfigurasi halaman
+st.set_page_config(page_title="🎓 Students Performance - Ahmad Hasanuddin", layout="wide")
 
-# Sidebar untuk navigasi
-st.sidebar.header("📊 Filter Data")
-status_filter = st.sidebar.multiselect(
-    "Pilih Status Prediksi:", 
-    options=data['Predicted_Status'].unique(), 
-    default=data['Predicted_Status'].unique()
-)
-st.sidebar.markdown("---")
-st.sidebar.header("📈 Analisis Data")
-visual_choice = st.sidebar.radio(
-    "Pilih Visualisasi:", 
-    options=["Distribusi Status", "Probabilitas Dropout vs Graduate"]
-)
+# Header dan logo
+image_files = ['logo-x.png']
+desired_width = 160
+desired_height = 160
 
-# Filter data berdasarkan pilihan pengguna
-filtered_data = data[data['Predicted_Status'].isin(status_filter)]
-
-# Menampilkan DataFrame
-st.subheader("📄 Data Siswa dan Prediksi Dropout")
-st.write("Tabel berikut menunjukkan data siswa dengan filter berdasarkan status prediksi yang dipilih.")
-st.dataframe(filtered_data)
-
-# Insight Statistik Dasar
-st.subheader("📊 Statistik Deskriptif")
-col1, col2 = st.columns(2)
+col1, col2 = st.columns([2, 10])
 with col1:
-    st.write("Statistik Probabilitas Dropout:")
-    st.write(filtered_data['Probability_of_Dropout'].describe())
+    for idx, image_file in enumerate(image_files):
+        img = Image.open(image_file)
+        resized_img = img.resize((desired_width, desired_height))
+        st.image(resized_img)
 with col2:
-    st.write("Statistik Probabilitas Graduate:")
-    st.write(filtered_data['Probability_of_Graduate'].describe())
+    st.header('Ahmad Hasanuddin Institute')
+    st.subheader("Students Performance Prediction App")
 
-# Visualisasi Data
-st.subheader("📈 Visualisasi Data")
-if visual_choice == "Distribusi Status":
-    st.write("Distribusi Prediksi Status Siswa:")
-    fig, ax = plt.subplots(figsize=(10, 6))
-    sns.countplot(x='Predicted_Status', data=filtered_data, ax=ax, palette="viridis")
-    ax.set_title('Distribusi Prediksi Status Siswa', fontsize=16)
-    ax.set_xlabel('Predicted Status', fontsize=12)
-    ax.set_ylabel('Jumlah', fontsize=12)
-    st.pyplot(fig)
-elif visual_choice == "Probabilitas Dropout vs Graduate":
-    st.write("Hubungan Probabilitas Dropout dan Graduate:")
-    fig, ax = plt.subplots(figsize=(10, 6))
-    sns.scatterplot(
-        x='Probability_of_Dropout', 
-        y='Probability_of_Graduate', 
-        hue='Predicted_Status',
-        data=filtered_data, 
-        palette="viridis",
-        ax=ax
-    )
-    ax.set_title('Probabilitas Dropout vs Graduate', fontsize=16)
-    ax.set_xlabel('Probabilitas Dropout', fontsize=12)
-    ax.set_ylabel('Probabilitas Graduate', fontsize=12)
-    st.pyplot(fig)
-
-# Insight Berdasarkan Status Prediksi
-st.subheader("🔍 Insight Berdasarkan Status Prediksi")
-if "Dropout" in filtered_data['Predicted_Status'].values:
-    dropout_rate = filtered_data['Predicted_Status'].value_counts(normalize=True).get("Dropout", 0) * 100
-    st.warning(f"⚠️ **{dropout_rate:.2f}% siswa dalam data ini diprediksi mengalami dropout.**")
-else:
-    st.success("Tidak ada siswa yang diprediksi dropout pada filter ini!")
-
-if "Graduate" in filtered_data['Predicted_Status'].values:
-    graduate_rate = filtered_data['Predicted_Status'].value_counts(normalize=True).get("Graduate", 0) * 100
-    st.info(f"🎓 **{graduate_rate:.2f}% siswa diprediksi akan lulus.**")
-
-# Penutup
-st.markdown("---")
-st.write("**💡 Rekomendasi Aksi:**")
-st.markdown("""
-1. Monitor siswa dengan probabilitas tinggi untuk **dropout** secara lebih intensif.
-2. Berikan dukungan tambahan kepada siswa yang memiliki probabilitas **dropout** di atas rata-rata.
-3. Perkuat sistem mentoring untuk membantu siswa dengan status **Enrolled** agar tetap dalam jalur menuju kelulusan.
-4. Lakukan analisis lebih mendalam pada faktor-faktor yang memengaruhi probabilitas dropout, seperti kinerja akademik atau kehadiran.
+# Sidebar untuk informasi pengembang
+st.sidebar.write("""
+    This web app predicts students' academic performance based on their input features.
 """)
+st.sidebar.write("""
+    **Nama:** Ahmad Hasanuddin \n
+    **Email:** ahmad.hasanuddin@app.com \n
+    **Id Dicoding:** ahmadhasan
+""")
+
+# Fungsi utilitas untuk encoding dan slider
+def encode_selection(encoder, selection, labels):
+    encoder.fit(labels)
+    return encoder.transform([selection])[0]
+
+def create_slider(label, min_value, max_value, value):
+    data[label] = [st.slider(label=label.replace('_', ' '), min_value=min_value, max_value=max_value, value=value)]
+
+# Input pengguna
+data = {}
+col1, col2, col3, col4 = st.columns(4)
+with col1:
+    Tuition_fees_up_to_date = st.selectbox(label='Tuition fees up to date', options=[0, 1], index=0)
+    data['Tuition_fees_up_to_date'] = [Tuition_fees_up_to_date]
+with col2:
+    Scholarship_holder = st.selectbox(label='Scholarship holder', options=[0, 1], index=0)
+    data['Scholarship_holder'] = [Scholarship_holder]
+with col3:
+    Debtor = st.selectbox(label='Debtor', options=[0, 1], index=1)
+    data['Debtor'] = [Debtor]
+with col4:
+    Displaced = st.selectbox(label='Displaced', options=[0, 1], index=0)
+    data['Displaced'] = [Displaced]
+
+col5, col6, col7, col8 = st.columns(4)
+with col5:
+    Daytime_evening_attendance = st.selectbox(label='Daytime/Evening Attendance', options=[0, 1], index=0)
+    data['Daytime_evening_attendance'] = [Daytime_evening_attendance]
+with col6:
+    Gender = st.selectbox(label='Gender', options=["Female", "Male"], index=1)
+    encoder_Gender = LabelEncoder()
+    encoder_Gender.fit(["Female", "Male"])
+    data['Gender'] = encoder_Gender.transform([Gender])[0]
+with col7:
+    create_slider('Admission_grade', 95, 190, 100)
+with col8:
+    create_slider('Previous_qualification_grade', 95, 190, 100)
+
+col9, col10, col11, col12 = st.columns(4)
+with col9:
+    create_slider('Curricular_units_1st_sem_approved', 0, 26, 5)
+with col10:
+    create_slider('Curricular_units_1st_sem_grade', 0, 18, 5)
+with col11:
+    create_slider('Curricular_units_1st_sem_enrolled', 0, 26, 5)
+with col12:
+    create_slider('Curricular_units_1st_sem_credited', 0, 20, 5)
+
+col13, col14, col15, col16 = st.columns(4)
+with col13:
+    create_slider('Curricular_units_2nd_sem_approved', 0, 20, 5)
+with col14:
+    create_slider('Curricular_units_2nd_sem_grade', 0, 20, 12)
+with col15:
+    create_slider('Curricular_units_2nd_sem_enrolled', 0, 23, 5)
+with col16:
+    create_slider('Curricular_units_2nd_sem_credited', 0, 19, 5)
+
+# Convert input menjadi DataFrame
+user_input_df = pd.DataFrame(data, index=[0])
+
+# Menampilkan input mentah
+with st.expander("Input Data"):
+    st.dataframe(user_input_df, width=1200, height=200)
+
+# Prediksi
+if st.button('Predict Performance'):
+    new_data = data_preprocessing(data)
+    with st.spinner('Predicting...'):
+        time.sleep(2)  # Simulasi proses prediksi
+        output = prediction(new_data)
+        st.success(f"Predicted Academic Performance: {output}")
+
+st.snow()
