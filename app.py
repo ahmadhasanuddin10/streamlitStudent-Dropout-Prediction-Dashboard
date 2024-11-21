@@ -13,7 +13,7 @@ import joblib
 # Load data
 @st.cache
 def load_data():
-    data = pd.read_csv("data(1).csv", sep=";")
+    data = pd.read_csv("data (1).csv", sep=";")
     return data
 
 # Preprocess data
