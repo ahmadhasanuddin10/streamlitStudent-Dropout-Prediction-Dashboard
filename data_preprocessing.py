@@ -2,6 +2,54 @@ import joblib
 import numpy as np
 import pandas as pd
 
+def data_preprocessing(data):
+    """Preprocessing data
+
+    Args:
+        data (Pandas DataFrame): Dataframe that contains all the data to make predictions
+
+    Returns:
+        Pandas DataFrame: Dataframe with all the preprocessed data
+    """
+    # Validasi apakah data adalah DataFrame
+    if not isinstance(data, pd.DataFrame):
+        raise TypeError(f"Expected input to be a Pandas DataFrame, but got {type(data).__name__} instead.")
+
+    # Salin data untuk memastikan tidak memodifikasi input asli
+    data = data.copy()
+    
+    # List kolom yang diperlukan
+    required_columns = [
+        "Tuition_fees_up_to_date",
+        "Scholarship_holder",
+        "Debtor",
+        "Displaced",
+        "Daytime_evening_attendance",
+        "Gender",
+        "Admission_grade",
+        "Curricular_units_1st_sem_approved",
+        "Curricular_units_1st_sem_credited",
+        "Curricular_units_1st_sem_enrolled",
+        "Curricular_units_1st_sem_grade",
+        "Curricular_units_2nd_sem_approved",
+        "Curricular_units_2nd_sem_credited",
+        "Curricular_units_2nd_sem_enrolled",
+        "Curricular_units_2nd_sem_grade",
+        "Previous_qualification_grade",
+    ]
+    
+    # Periksa kolom yang hilang
+    missing_columns = [col for col in required_columns if col not in data.columns]
+    if missing_columns:
+        raise KeyError(f"The following columns are missing from the dataset: {missing_columns}")
+
+
+
+
+
+
+
+
 # Load encoders and scalers
 encoder_Tuition_fees_up_to_date = joblib.load("model/encoder_Tuition_fees_up_to_date.joblib")
 encoder_Scholarship_holder = joblib.load("model/encoder_Scholarship_holder.joblib")
