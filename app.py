@@ -11,13 +11,6 @@ from data_preprocessing import scaler_Admission_grade, scaler_Curricular_units_1
 
 from prediction import prediction
 
-import logging
-logging.basicConfig(level=logging.DEBUG)
-
-# Debug data sebelum diproses
-logging.debug(f"Input data type: {type(data)}")
-logging.debug(f"Input data columns: {data.columns if isinstance(data, pd.DataFrame) else 'Not a DataFrame'}")
-
 
 
 
