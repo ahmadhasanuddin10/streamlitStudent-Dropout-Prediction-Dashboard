@@ -1,4 +1,3 @@
-#Students_Performance.py
 import streamlit as st
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
@@ -14,12 +13,37 @@ from prediction import prediction
 
 st.set_page_config(page_title="🎓 Students Performance", layout="wide")
 
-image_files = ['logouns.png']
+# Customizing the app's look
+st.markdown("""
+    <style>
+    .stApp {
+        background-color: #f4f4f9;
+    }
+    .css-ffhzg2 {
+        background-color: #4CAF50;
+        color: white;
+        font-size: 1.5em;
+    }
+    .css-1v0mbdj {
+        padding: 10px;
+        background-color: #E0E0E0;
+    }
+    .css-1d391kg {
+        background-color: #ffffff;
+    }
+    .css-12ttk8i {
+        margin-top: 1em;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
+# Add logo
+image_files = ['pubg.png']
 desired_width = 160
 desired_height = 160
 
-col1, col2 = st.columns([2, 10])
+# Create a row for the logo and introductory information
+col1, col2 = st.columns([1, 3])
 
 with col1:
     for idx, image_file in enumerate(image_files):
@@ -27,18 +51,17 @@ with col1:
         resized_img = img.resize((desired_width, desired_height))
         st.image(resized_img)
 with col2:
-    st.header('X INSTITUTE')
+    st.header('Jaya Jaya Institut')
     st.subheader("Students Performance Prediction")
+    st.write("""
+        Digunakan untuk memprediksi Performa Mahasiswa
+    """)
+    st.write("""
+        **Nama:** Hasanuddin \n
+        **Email:** hasanuddin5@gmail.com \n
+        
+    """)
 
-st.sidebar.write("""
-    This web app is designed to predict students academic performance based on the given input.
-""")
-
-st.sidebar.write("""
-    **Nama:** Arini Arumsari \n
-    **Email:** ariniarum98@gmail.com \n
-    **Id Dicoding:** -
-""")
 
 # Initialize an empty dictionary to store user input
 data = {}
@@ -53,6 +76,7 @@ def encode_selection(encoder, selection, labels):
 def create_slider(label, min_value, max_value, value):
     data[label] = [st.slider(label=label.replace('_', ' '), min_value=min_value, max_value=max_value, value=value)]
 
+# Create form for input fields
 col1, col2, col3, col4 = st.columns(4)
 with col1:
     encoder_Tuition_fees_up_to_date.fit([0, 1])
@@ -81,7 +105,6 @@ with col6:
     encoder_Gender.fit(["Female", "Male"])
     Gender = st.selectbox(label='Gender', options=["Female", "Male"], index=1)
     data['Gender'] = encoder_Gender.transform([Gender])[0]
-    # print(data['Gender'])
 with col7:
     create_slider('Admission_grade', 95, 190, 100)
 with col8:
@@ -122,4 +145,4 @@ if st.button('Click Here to Predict'):
         output = prediction(new_data)
         st.success(f"Prediction: {output}")
 
-st.snow()
+
