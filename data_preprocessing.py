@@ -20,17 +20,24 @@ scaler_Curricular_units_2nd_sem_enrolled = joblib.load("model/scaler_Curricular_
 scaler_Curricular_units_2nd_sem_grade = joblib.load("model/scaler_Curricular_units_2nd_sem_grade.joblib")
 scaler_Previous_qualification_grade = joblib.load("model/scaler_Previous_qualification_grade.joblib")
 
-# Function to apply encoding and scaling
+# Helper function to apply encoder or scaler
 def apply_encoder_or_scaler(data, column, transformer, is_scaler=False):
     """Applies the encoder or scaler to a given column of data."""
     if column in data.columns:
         if is_scaler:
-            return transformer.transform(np.asarray(data[column]).reshape(-1, 1))
+            try:
+                return transformer.transform(np.asarray(data[column]).reshape(-1, 1))
+            except Exception as e:
+                raise ValueError(f"Error scaling column '{column}': {e}")
         else:
-            return transformer.transform(data[column])
+            try:
+                return transformer.transform(data[column])
+            except Exception as e:
+                raise ValueError(f"Error encoding column '{column}': {e}")
     else:
         raise KeyError(f"Column '{column}' not found in the data.")
 
+# Main preprocessing function
 def data_preprocessing(data):
     """Preprocessing data
 
@@ -43,7 +50,32 @@ def data_preprocessing(data):
     data = data.copy()
     df = pd.DataFrame()
 
-    # Apply transformations with error handling
+    # List of required columns
+    required_columns = [
+        "Tuition_fees_up_to_date",
+        "Scholarship_holder",
+        "Debtor",
+        "Displaced",
+        "Daytime_evening_attendance",
+        "Gender",
+        "Admission_grade",
+        "Curricular_units_1st_sem_approved",
+        "Curricular_units_1st_sem_credited",
+        "Curricular_units_1st_sem_enrolled",
+        "Curricular_units_1st_sem_grade",
+        "Curricular_units_2nd_sem_approved",
+        "Curricular_units_2nd_sem_credited",
+        "Curricular_units_2nd_sem_enrolled",
+        "Curricular_units_2nd_sem_grade",
+        "Previous_qualification_grade",
+    ]
+
+    # Check for missing columns
+    missing_columns = [col for col in required_columns if col not in data.columns]
+    if missing_columns:
+        raise KeyError(f"The following columns are missing from the dataset: {missing_columns}")
+
+    # Preprocess each column
     try:
         df["Tuition_fees_up_to_date"] = apply_encoder_or_scaler(data, "Tuition_fees_up_to_date", encoder_Tuition_fees_up_to_date)
         df["Scholarship_holder"] = apply_encoder_or_scaler(data, "Scholarship_holder", encoder_Scholarship_holder)
@@ -61,8 +93,7 @@ def data_preprocessing(data):
         df["Curricular_units_2nd_sem_enrolled"] = apply_encoder_or_scaler(data, "Curricular_units_2nd_sem_enrolled", scaler_Curricular_units_2nd_sem_enrolled, is_scaler=True)
         df["Curricular_units_2nd_sem_grade"] = apply_encoder_or_scaler(data, "Curricular_units_2nd_sem_grade", scaler_Curricular_units_2nd_sem_grade, is_scaler=True)
         df["Previous_qualification_grade"] = apply_encoder_or_scaler(data, "Previous_qualification_grade", scaler_Previous_qualification_grade, is_scaler=True)
-    except KeyError as e:
-        print(f"Error: {e}")
-        return None  # Or handle error appropriately
+    except Exception as e:
+        raise RuntimeError(f"An error occurred during preprocessing: {e}")
 
     return df
