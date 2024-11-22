@@ -2,7 +2,7 @@
 
 
 ## Business Understanding
-Latar Belakang Bisnis: Perusahaan Edutech ini menyediakan layanan pendidikan berbasis digital untuk membantu siswa dalam proses belajar. Namun, perusahaan menghadapi tantangan dalam mengelola data siswa, seperti identifikasi risiko dropout. Meningkatnya angka dropout dapat memengaruhi reputasi perusahaan dan mengurangi pendapatan dari langganan.
+Latar Belakang Bisnis: Jaya Jaya Institut adalah institusi pendidikan yang berdiri sejak tahun 2000 dengan reputasi baik dalam mencetak lulusan. Namun, terdapat tantangan besar berupa tingginya angka dropout di kalangan siswa. Masalah ini berpotensi merusak reputasi institusi dan mengurangi tingkat keberhasilan akademik.
 
 
 ### Permasalahan Bisnis
@@ -12,7 +12,10 @@ Kebutuhan untuk memonitor dan menganalisis data siswa secara interaktif untuk pe
 
 
 ### Cakupan Proyek
-Tuliskan cakupan proyek yang akan dikerjakan.
+Data Preprocessing: Membersihkan dan mempersiapkan data siswa untuk analisis dan model machine learning.
+Model Machine Learning: Mengembangkan sistem prediksi risiko dropout menggunakan algoritma machine learning.
+Business Dashboard: Membuat dashboard untuk memvisualisasikan data siswa, faktor-faktor risiko, dan prediksi dropout.
+Prototipe Sistem: Menyediakan antarmuka untuk mengunggah data baru dan mendapatkan prediksi risiko dropout.
 
 ### Persiapan
 
