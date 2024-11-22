@@ -40,12 +40,17 @@ https://lookerstudio.google.com/reporting/fe9dcb0f-1122-4d57-a9e4-34d11927daf9
 ## Menjalankan Sistem Machine Learning
 Cara Menjalankan Prototipe:
 
-Local:
+1. Local:
 Jalankan perintah berikut:
 
 ```
 streamlit run app.py
 ```
+Akses prototipe di browser melalui http://localhost:8501.
+
+2. Hosting: Jika di-deploy di Streamlit Cloud, pengguna hanya perlu mengakses tautan yang disediakan.
+
+
 Akses prototipe di browser melalui :https://appstudent-dropout-prediction-dashboard-zbacgnvnm3ekgc3nhv6hun.streamlit.app/
 
 
