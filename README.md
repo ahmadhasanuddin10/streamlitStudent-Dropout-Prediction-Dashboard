@@ -34,9 +34,9 @@ streamlit
 
 ## Business Dashboard
 Dashboard dibuat dengan menggunakan Google Looker Studio. Dashboard dapat diakses pada link berikut ini:
-
+```
 https://lookerstudio.google.com/reporting/fe9dcb0f-1122-4d57-a9e4-34d11927daf9
-
+```
 ## Menjalankan Sistem Machine Learning
 Cara Menjalankan Prototipe:
 
@@ -51,8 +51,10 @@ Akses prototipe di browser melalui http://localhost:8501.
 2. Hosting: Jika di-deploy di Streamlit Cloud, pengguna hanya perlu mengakses tautan yang disediakan.
 
 
-Akses prototipe di browser melalui :https://appstudent-dropout-prediction-dashboard-zbacgnvnm3ekgc3nhv6hun.streamlit.app/
-
+Akses prototipe di browser melalui :
+```
+https://appstudent-dropout-prediction-dashboard-zbacgnvnm3ekgc3nhv6hun.streamlit.app/
+```
 
 ## Conclusion
 Proyek ini berhasil mengembangkan model prediksi risiko dropout siswa dan dashboard interaktif. Model mampu memberikan wawasan tentang faktor-faktor utama yang memengaruhi dropout, sementara dashboard memungkinkan manajemen untuk menganalisis data secara cepat dan membuat keputusan berbasis data.
