@@ -43,6 +43,20 @@ def data_preprocessing(data):
     if missing_columns:
         raise KeyError(f"The following columns are missing from the dataset: {missing_columns}")
 
+def data_preprocessing(data):
+    """Preprocessing data"""
+    import logging
+
+    # Debug: Periksa tipe data
+    logging.debug(f"Received data type: {type(data)}")
+    
+    if not isinstance(data, pd.DataFrame):
+        raise TypeError(f"Expected input to be a Pandas DataFrame, but got {type(data).__name__}.")
+
+    # Debug: Periksa kolom data
+    logging.debug(f"Data columns: {data.columns.tolist()}")
+
+    # Lanjutkan proses data seperti biasa...
 
 
 
