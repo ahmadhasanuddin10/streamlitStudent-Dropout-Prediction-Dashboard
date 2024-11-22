@@ -29,8 +29,8 @@ def data_preprocessing(data):
     return:
         Pandas DataFrame: Dataframe that contain all the preprocessed data
     """
-    # Membaca dataset
-    df = pd.read_csv('data.csv', sep=r',|;', engine='python')
+
+    data = data.copy()
     df = pd.DataFrame()
 
     # Perform transformations
