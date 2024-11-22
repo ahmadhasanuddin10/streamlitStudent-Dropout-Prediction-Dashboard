@@ -1,148 +1,67 @@
 import streamlit as st
 import pandas as pd
-from sklearn.preprocessing import LabelEncoder
 import joblib
-from PIL import Image
+from sklearn.preprocessing import StandardScaler, LabelEncoder
 import time
-from data_preprocessing import data_preprocessing
 
-from data_preprocessing import encoder_Daytime_evening_attendance, encoder_Debtor, encoder_Displaced, encoder_Gender, encoder_Scholarship_holder, encoder_Tuition_fees_up_to_date
-from data_preprocessing import scaler_Admission_grade, scaler_Curricular_units_1st_sem_approved, scaler_Curricular_units_1st_sem_credited, scaler_Curricular_units_1st_sem_enrolled, scaler_Curricular_units_1st_sem_grade, scaler_Curricular_units_2nd_sem_approved, scaler_Curricular_units_2nd_sem_credited, scaler_Curricular_units_2nd_sem_enrolled, scaler_Curricular_units_2nd_sem_grade, scaler_Previous_qualification_grade
+# Load model
+model = joblib.load('Random_Forest_Model.joblib')
 
-from prediction import prediction
+# Page configuration
+st.set_page_config(page_title="🎓 Student Performance Prediction", layout="wide")
 
-st.set_page_config(page_title="🎓 Students Performance", layout="wide")
+# App title
+st.title("🎓 Student Performance Prediction")
+st.write("""
+Aplikasi untuk memprediksi performa mahasiswa berdasarkan berbagai atribut.
+""")
 
-# Customizing the app's look
-st.markdown("""
-    <style>
-    .stApp {
-        background-color: #f4f4f9;
-    }
-    .css-ffhzg2 {
-        background-color: #4CAF50;
-        color: white;
-        font-size: 1.5em;
-    }
-    .css-1v0mbdj {
-        padding: 10px;
-        background-color: #E0E0E0;
-    }
-    .css-1d391kg {
-        background-color: #ffffff;
-    }
-    .css-12ttk8i {
-        margin-top: 1em;
-    }
-    </style>
-""", unsafe_allow_html=True)
+# Sidebar for user input
+st.sidebar.header("Input Features")
+categorical_features = ['Gender', 'Displaced', 'Debtor', 'Scholarship_holder', 'Tuition_fees_up_to_date', 'Daytime_evening_attendance']
+numerical_features = ['Admission_grade', 'Previous_qualification_grade', 'Curricular_units_1st_sem_approved']
 
-# Add logo
-image_files = ['pubg.png']
-desired_width = 160
-desired_height = 160
+# Helper for encoding categorical features
+def encode_categorical(data):
+    label_encoders = {col: LabelEncoder() for col in categorical_features}
+    for col in categorical_features:
+        label_encoders[col].fit(['No', 'Yes'])  # Assume binary values
+        data[col] = label_encoders[col].transform(data[col])
+    return data
 
-# Create a row for the logo and introductory information
-col1, col2 = st.columns([1, 3])
+# Helper for scaling numerical features
+def scale_numerical(data):
+    scaler = StandardScaler()
+    data[numerical_features] = scaler.fit_transform(data[numerical_features])
+    return data
 
-with col1:
-    for idx, image_file in enumerate(image_files):
-        img = Image.open(image_file)
-        resized_img = img.resize((desired_width, desired_height))
-        st.image(resized_img)
-with col2:
-    st.header('Jaya Jaya Institut')
-    st.subheader("Students Performance Prediction")
-    st.write("""
-        Digunakan untuk memprediksi Performa Mahasiswa
-    """)
-    st.write("""
-        **Nama:** Hasanuddin \n
-        **Email:** hasanuddin5@gmail.com \n
-        
-    """)
+# User input
+def user_input_features():
+    inputs = {}
+    inputs['Gender'] = st.sidebar.selectbox('Gender', ['Female', 'Male'])
+    inputs['Displaced'] = st.sidebar.selectbox('Displaced', ['No', 'Yes'])
+    inputs['Debtor'] = st.sidebar.selectbox('Debtor', ['No', 'Yes'])
+    inputs['Scholarship_holder'] = st.sidebar.selectbox('Scholarship Holder', ['No', 'Yes'])
+    inputs['Tuition_fees_up_to_date'] = st.sidebar.selectbox('Tuition Fees Up-to-date', ['No', 'Yes'])
+    inputs['Daytime_evening_attendance'] = st.sidebar.selectbox('Daytime/Evening Attendance', ['No', 'Yes'])
+    inputs['Admission_grade'] = st.sidebar.slider('Admission Grade', 0.0, 20.0, 10.0)
+    inputs['Previous_qualification_grade'] = st.sidebar.slider('Previous Qualification Grade', 0.0, 20.0, 10.0)
+    inputs['Curricular_units_1st_sem_approved'] = st.sidebar.slider('1st Sem Approved Units', 0, 20, 10)
+    return pd.DataFrame([inputs])
 
+# Get input data
+input_df = user_input_features()
 
-# Initialize an empty dictionary to store user input
-data = {}
+# Preprocessing
+st.write("### Input Data")
+st.write(input_df)
+processed_data = encode_categorical(input_df.copy())
+processed_data = scale_numerical(processed_data)
 
-# Convert user input dictionary to DataFrame
-user_input_df = pd.DataFrame(data, index=[0])
-
-def encode_selection(encoder, selection, labels):
-    encoder.fit(labels)
-    return encoder.transform([selection])[0]
-
-def create_slider(label, min_value, max_value, value):
-    data[label] = [st.slider(label=label.replace('_', ' '), min_value=min_value, max_value=max_value, value=value)]
-
-# Create form for input fields
-col1, col2, col3, col4 = st.columns(4)
-with col1:
-    encoder_Tuition_fees_up_to_date.fit([0, 1])
-    Tuition_fees_up_to_date = st.selectbox(label='Tuition fees', options=[0, 1], index=0)
-    data['Tuition_fees_up_to_date'] = [encoder_Tuition_fees_up_to_date.transform([Tuition_fees_up_to_date])[0]]
-with col2:
-    encoder_Scholarship_holder.fit([0, 1])
-    Scholarship_holder = st.selectbox(label='Scholarship holder', options=[0, 1], index=0)
-    data['Scholarship_holder'] = [encoder_Scholarship_holder.transform([Scholarship_holder])[0]]
-with col3:
-    encoder_Debtor.fit([0, 1])
-    Debtor = st.selectbox(label='Debtor', options=[0, 1], index=1)
-    data['Debtor'] = [encoder_Debtor.transform([Debtor])[0]]
-with col4:
-    encoder_Displaced.fit([0, 1])
-    Displaced = st.selectbox(label='Displaced', options=[0, 1], index=0)
-    data['Displaced'] = [encoder_Displaced.transform([Displaced])[0]]
-
-col5, col6, col7, col8 = st.columns(4)
-with col5:
-    encoder_Daytime_evening_attendance.fit([0, 1])
-    Daytime_evening_attendance = st.selectbox(label='Attendance', options=[0, 1], index=0)
-    data['Daytime_evening_attendance'] = [encoder_Daytime_evening_attendance.transform([Daytime_evening_attendance])[0]]
-with col6:
-    encoder_Gender = LabelEncoder()
-    encoder_Gender.fit(["Female", "Male"])
-    Gender = st.selectbox(label='Gender', options=["Female", "Male"], index=1)
-    data['Gender'] = encoder_Gender.transform([Gender])[0]
-with col7:
-    create_slider('Admission_grade', 95, 190, 100)
-with col8:
-    create_slider('Previous_qualification_grade', 95, 190, 100)
-
-col9, col10, col11, col12 = st.columns(4)
-with col9:
-    create_slider('Curricular_units_1st_sem_approved', 0, 26, 5)
-with col10:
-    create_slider('Curricular_units_1st_sem_grade', 0, 18, 5)
-with col11:
-    create_slider('Curricular_units_1st_sem_enrolled', 0, 26, 5)
-with col12:
-    create_slider('Curricular_units_1st_sem_credited', 0, 20, 5)
-
-col13, col14, col15, col16 = st.columns(4)
-with col13:
-    create_slider('Curricular_units_2nd_sem_approved', 0, 20, 5)
-with col14:
-    create_slider('Curricular_units_2nd_sem_grade', 0, 20, 12)
-with col15:
-    create_slider('Curricular_units_2nd_sem_enrolled', 0, 23, 5)
-with col16:
-    create_slider('Curricular_units_2nd_sem_credited', 0, 19, 5)
-
-# Convert user input dictionary to DataFrame
-user_input_df = pd.DataFrame(data, index=[0])
-
-# Display user input
-with st.expander("Raw Dataset"):
-    st.dataframe(data=user_input_df, width=1200, height=20)
-
-# Preprocess data and make prediction on button click
-if st.button('Click Here to Predict'):
-    new_data = data_preprocessing(data=data)
-    with st.spinner('Predicting...'):
-        time.sleep(2)  # Simulating prediction process
-        output = prediction(new_data)
-        st.success(f"Prediction: {output}")
-
-
+# Prediction
+if st.button('Predict'):
+    with st.spinner("Predicting..."):
+        time.sleep(2)  # Simulate processing
+        prediction = model.predict(processed_data)
+        result = "Graduate" if prediction[0] == 1 else "Dropout"
+        st.success(f"Prediction: The student is likely to {result}.")
